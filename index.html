@@ -2,55 +2,77 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Bản đồ vị trí hiện tại</title>
+  <title>Vị trí hiện tại động</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCFYNTEIsshb7-xRsWFRAqn5G6lDUO3nN8"></script>
   <style>
-    body, html {
+    html, body {
       height: 100%;
       margin: 0;
       padding: 0;
     }
-    #map-frame {
-      width: 100%;
+    #map {
       height: 100%;
-      border: 0;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-
-<iframe
-  id="map-frame"
-  loading="lazy"
-  allowfullscreen
-  referrerpolicy="no-referrer-when-downgrade"
-  src="">
-</iframe>
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3725.2501746435905!2d105.87576277593948!3d20.982606489360784!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135aea030ef16d7%3A0xd4eb55fd5fb08f7b!2zNDE5IMSQLiBMxKluaCBOYW0sIFbEqW5oIEjGsG5nLCBIYWkgQsOgIFRyxrBuZywgSMOgIE7hu5lpLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1760870519438!5m2!1svi!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>    
+<div id="map"></div>
 
 <script>
-  const iframe = document.getElementById('map-frame');
+let map, userMarker, infoWindow;
 
+function initMap() {
+  // Map tạm thời trung tâm HCM
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 10.7769, lng: 106.7009 },
+    zoom: 15,
+    mapTypeControl: true,
+    streetViewControl: true,
+    fullscreenControl: true,
+    zoomControl: true
+  });
+
+  infoWindow = new google.maps.InfoWindow();
+
+  // Lấy vị trí hiện tại và cập nhật liên tục
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.watchPosition(
       (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
 
-        // Tạo URL iframe với tọa độ hiện tại
-        const mapUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyB52ZCqlP9BnBcuV3Rxp3G-2EbV-YcSAvE&center=${lat},${lng}&zoom=15`;
-        iframe.src = mapUrl;
+        map.setCenter(pos); // center map tại vị trí hiện tại
+
+        if (!userMarker) {
+          userMarker = new google.maps.Marker({
+            position: pos,
+            map: map,
+            title: "Vị trí của bạn",
+            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+          });
+          infoWindow.setContent("Bạn đang ở đây!");
+          infoWindow.open(map, userMarker);
+        } else {
+          // di chuyển marker theo vị trí mới
+          userMarker.setPosition(pos);
+        }
       },
       (error) => {
-        console.error("Không thể lấy vị trí:", error);
-        // Nếu lỗi, dùng HCM làm mặc định
-        iframe.src = "https://www.google.com/maps/embed/v1/view?key=AIzaSyB52ZCqlP9BnBcuV3Rxp3G-2EbV-YcSAvE&center=10.7769,106.7009&zoom=15";
+        console.error("Lỗi Geolocation:", error);
+        alert("Không thể lấy vị trí hiện tại.");
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, maximumAge: 0 }
     );
   } else {
     alert("Trình duyệt không hỗ trợ Geolocation.");
-    iframe.src = "https://www.google.com/maps/embed/v1/view?key=AIzaSyB52ZCqlP9BnBcuV3Rxp3G-2EbV-YcSAvE&center=10.7769,106.7009&zoom=15";
   }
-</script>
+}
 
+window.onload = initMap;
+</script>
 </body>
 </html>
